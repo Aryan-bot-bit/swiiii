@@ -1,0 +1,380 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .review-section {
+            margin-top: 20px;
+        }
+        .review {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .review-form {
+            margin-top: 20px;
+        }
+        .review-form input, .review-form textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .review-form button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .edit-button, .delete-button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .edit-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+        .stars {
+            display: inline-flex;
+            margin-bottom: 10px;
+        }
+        .stars input {
+            display: none;
+        }
+        .stars label {
+            font-size: 20px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .stars input:checked ~ label,
+        .stars input:hover ~ label {
+            color: #ffcc00;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Product Details</h1>
+        <button onclick="goBack()">Back to Menu</button>
+    </header>
+    <main>
+        <div id="product-details">
+            <img id="product-image" src="" alt="Product Image" />
+            <h2 id="product-name"></h2>
+            <p id="product-price"></p>
+        </div>
+
+        <div class="review-section">
+            <h3>Reviews</h3>
+            <div id="reviews-list"></div>
+            <div class="review-form">
+                <h4>Leave a Review</h4>
+                <div class="stars">
+                    <input type="radio" name="rating" id="star5" value="5">
+                    <label for="star5">★</label>
+                    <input type="radio" name="rating" id="star4" value="4">
+                    <label for="star4">★</label>
+                    <input type="radio" name="rating" id="star3" value="3">
+                    <label for="star3">★</label>
+                    <input type="radio" name="rating" id="star2" value="2">
+                    <label for="star2">★</label>
+                    <input type="radio" name="rating" id="star1" value="1">
+                    <label for="star1">★</label>
+                </div>
+                <input type="text" id="reviewer-name" placeholder="Your Name" required>
+                <textarea id="review-text" rows="4" placeholder="Write your review here..." required></textarea>
+                <button onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        // Get the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name');
+        const price = urlParams.get('price');
+        const image = urlParams.get('image');
+
+        // Set the product details
+        document.getElementById('product-name').textContent = name;
+        document.getElementById('product-price').textContent = `Price: Rs. ${price}`;
+        document.getElementById('product-image').src = image;
+
+        // Review functionality
+        const reviewsList = document.getElementById('reviews-list');
+        let editingReviewIndex = null;
+
+        function submitReview() {
+            const reviewerName = document.getElementById('reviewer-name').value;
+            const reviewText = document.getElementById('review-text').value;
+            const rating = document.querySelector('input[name="rating"]:checked');
+
+            if (reviewerName && reviewText && rating) {
+                if (editingReviewIndex !== null) {
+                    // Update existing review
+                    const reviewDiv = reviewsList.children[editingReviewIndex];
+                    reviewDiv.querySelector('.review-text').textContent = reviewText;
+                    reviewDiv.querySelector('.reviewer-name').textContent = reviewerName;
+                    reviewDiv.querySelector('.review-rating').innerHTML = renderStars(rating.value);
+                    editingReviewIndex = null; // Reset editing index
+                } else {
+                    // Create new review
+                    const reviewDiv = document.createElement('div');
+                    reviewDiv.classList.add('review');
+                    reviewDiv.innerHTML = `
+                        <strong class="reviewer-name">${reviewerName}</strong>
+                        <p class="review-rating">${renderStars(rating.value)}</p>
+                        <p class="review-text">${reviewText}</p>
+                        <button class="edit-button" onclick="editReview(this)">Edit</button>
+                        <button class="delete-button" onclick="deleteReview(this)">Delete</button>
+                    `;
+                    reviewsList.appendChild(reviewDiv);
+                }
+
+                // Clear the form
+                document.getElementById('reviewer-name').value = '';
+                document.getElementById('review-text').value = '';
+                document.querySelectorAll('input[name="rating"]').forEach(radio => radio.checked = false);
+            } else {
+                alert("Please fill in all fields and select a star rating.");
+            }
+        }
+
+        function renderStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= rating ? '★' : '☆';
+            }
+            return stars;
+        }
+
+        function editReview(button) {
+            const reviewDiv = button.parentElement;
+            const reviewerName = reviewDiv.querySelector('.reviewer-name').textContent;
+            const reviewText = reviewDiv.querySelector('.review-text').textContent;
+            const rating = reviewDiv.querySelector('.review-rating').textContent.split('★').length - 1;
+
+            document.getElementById('reviewer-name').value = reviewerName;
+            document.getElementById('review-text').value = reviewText;
+            document.getElementById(`star${rating}`).checked = true;
+
+            // Set the editing index
+            editingReviewIndex = Array.from(reviewsList.children).indexOf(reviewDiv);
+        }
+
+        function deleteReview(button) {
+            const reviewDiv = button.parentElement;
+            reviewsList.removeChild(reviewDiv);
+        }
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .review-section {
+            margin-top: 20px;
+        }
+        .review {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .review-form {
+            margin-top: 20px;
+        }
+        .review-form input, .review-form textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .review-form button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .edit-button, .delete-button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .edit-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+        .stars {
+            display: inline-flex;
+            margin-bottom: 10px;
+        }
+        .stars input {
+            display: none;
+        }
+        .stars label {
+            font-size: 20px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .stars input:checked ~ label,
+        .stars input:hover ~ label {
+            color: #ffcc00;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Product Details</h1>
+        <button onclick="goBack()">Back to Menu</button>
+    </header>
+    <main>
+        <div id="product-details">
+            <img id="product-image" src="" alt="Product Image" />
+            <h2 id="product-name"></h2>
+            <p id="product-price"></p>
+        </div>
+
+        <div class="review-section">
+            <h3>Reviews</h3>
+            <div id="reviews-list"></div>
+            <div class="review-form">
+                <h4>Leave a Review</h4>
+                <div class="stars">
+                    <input type="radio" name="rating" id="star5" value="5">
+                    <label for="star5">★</label>
+                    <input type="radio" name="rating" id="star4" value="4">
+                    <label for="star4">★</label>
+                    <input type="radio" name="rating" id="star3" value="3">
+                    <label for="star3">★</label>
+                    <input type="radio" name="rating" id="star2" value="2">
+                    <label for="star2">★</label>
+                    <input type="radio" name="rating" id="star1" value="1">
+                    <label for="star1">★</label>
+                </div>
+                <input type="text" id="reviewer-name" placeholder="Your Name" required>
+                <textarea id="review-text" rows="4" placeholder="Write your review here..." required></textarea>
+                <button onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        // Get the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name');
+        const price = urlParams.get('price');
+        const image = urlParams.get('image');
+
+        // Set the product details
+        document.getElementById('product-name').textContent = name;
+        document.getElementById('product-price').textContent = `Price: Rs. ${price}`;
+        document.getElementById('product-image').src = image;
+
+        // Review functionality
+        const reviewsList = document.getElementById('reviews-list');
+        let editingReviewIndex = null;
+
+        function submitReview() {
+            const reviewerName = document.getElementById('reviewer-name').value;
+            const reviewText = document.getElementById('review-text').value;
+            const rating = document.querySelector('input[name="rating"]:checked');
+
+            if (reviewerName && reviewText && rating) {
+                if (editingReviewIndex !== null) {
+                    // Update existing review
+                    const reviewDiv = reviewsList.children[editingReviewIndex];
+                    reviewDiv.querySelector('.review-text').textContent = reviewText;
+                    reviewDiv.querySelector('.reviewer-name').textContent = reviewerName;
+                    reviewDiv.querySelector('.review-rating').innerHTML = renderStars(rating.value);
+                    editingReviewIndex = null; // Reset editing index
+                } else {
+                    // Create new review
+                    const reviewDiv = document.createElement('div');
+                    reviewDiv.classList.add('review');
+                    reviewDiv.innerHTML = `
+                        <strong class="reviewer-name">${reviewerName}</strong>
+                        <p class="review-rating">${renderStars(rating.value)}</p>
+                        <p class="review-text">${reviewText}</p>
+                        <button class="edit-button" onclick="editReview(this)">Edit</button>
+                        <button class="delete-button" onclick="deleteReview(this)">Delete</button>
+                    `;
+                    reviewsList.appendChild(reviewDiv);
+                }
+
+                // Clear the form
+                document.getElementById('reviewer-name').value = '';
+                document.getElementById('review-text').value = '';
+                document.querySelectorAll('input[name="rating"]').forEach(radio => radio.checked = false);
+            } else {
+                alert("Please fill in all fields and select a star rating.");
+            }
+        }
+
+        function renderStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= rating ? '★' : '☆';
+            }
+            return stars;
+        }
+
+        function editReview(button) {
+            const reviewDiv = button.parentElement;
+            const reviewerName = reviewDiv.querySelector('.reviewer-name').textContent;
+            const reviewText = reviewDiv.querySelector('.review-text').textContent;
+            const rating = reviewDiv.querySelector('.review-rating').textContent.split('★').length - 1;
+
+            document.getElementById('reviewer-name').value = reviewerName;
+            document.getElementById('review-text').value = reviewText;
+            document.getElementById(`star${rating}`).checked = true;
+
+            // Set the editing index
+            editingReviewIndex = Array.from(reviewsList.children).indexOf(reviewDiv);
+        }
+
+        function deleteReview(button) {
+            const reviewDiv = button.parentElement;
+            reviewsList.removeChild(reviewDiv);
+        }
+    </script>
+</body>
+</html>
